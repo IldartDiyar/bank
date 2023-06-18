@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createRamdomAccount(t *testing.T) Account {
+func createRandomAccount(t *testing.T) Account {
 	arg := CreateAccountParams{util.RandomOwner(), util.RamdomMoney(), util.RandomCurrency()}
 
 	account, err := testQueries.CreateAccount(context.Background(), arg)
@@ -26,11 +26,11 @@ func createRamdomAccount(t *testing.T) Account {
 }
 
 func TestCreateAccount(t *testing.T) {
-	createRamdomAccount(t)
+	createRandomAccount(t)
 }
 
 func TestGetAccount(t *testing.T) {
-	account1 := createRamdomAccount(t)
+	account1 := createRandomAccount(t)
 	account2, err := testQueries.GetAccount(context.Background(), account1.ID)
 
 	require.NoError(t, err)
@@ -44,7 +44,7 @@ func TestGetAccount(t *testing.T) {
 }
 
 func TestUpdateAccount(t *testing.T) {
-	account1 := createRamdomAccount(t)
+	account1 := createRandomAccount(t)
 
 	arg := UpdateAccountParams{
 		account1.ID,
@@ -63,7 +63,7 @@ func TestUpdateAccount(t *testing.T) {
 }
 
 func TestDeleteAccount(t *testing.T) {
-	account1 := createRamdomAccount(t)
+	account1 := createRandomAccount(t)
 
 	err := testQueries.DeleteAccount(context.Background(), account1.ID)
 
@@ -77,7 +77,7 @@ func TestDeleteAccount(t *testing.T) {
 func TestListAccounts(t *testing.T) {
 	var accounts []Account
 	for i := 0; i < 5; i++ {
-		accounts = append(accounts, createRamdomAccount(t))
+		accounts = append(accounts, createRandomAccount(t))
 	}
 	arg := ListAccountsParams{Limit: 5, Offset: 5}
 
@@ -94,7 +94,7 @@ func TestListAccounts(t *testing.T) {
 }
 
 func TestAddAccountBalance(t *testing.T) {
-	account1 := createRamdomAccount(t)
+	account1 := createRandomAccount(t)
 
 	arg := AddAccountBalanceParams{Amount: util.RamdomMoney(), ID: account1.ID}
 
@@ -106,5 +106,19 @@ func TestAddAccountBalance(t *testing.T) {
 	require.Equal(t, account1.Owner, account2.Owner)
 	require.Equal(t, account1.Currency, account2.Currency)
 	require.Equal(t, account1.Balance+arg.Amount, account2.Balance)
+	require.WithinDuration(t, account1.CreatedAt, account2.CreatedAt, time.Second)
+}
+
+func TestGetAccountForUpdate(t *testing.T) {
+	account1 := createRandomAccount(t)
+
+	account2, err := testQueries.GetAccountForUpdate(context.Background(), account1.ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, account1)
+
+	require.Equal(t, account1.ID, account2.ID)
+	require.Equal(t, account1.Owner, account2.Owner)
+	require.Equal(t, account1.Currency, account2.Currency)
+	require.Equal(t, account1.Balance, account2.Balance)
 	require.WithinDuration(t, account1.CreatedAt, account2.CreatedAt, time.Second)
 }
